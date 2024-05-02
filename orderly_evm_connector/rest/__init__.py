@@ -7,11 +7,12 @@ class Rest(API):
         orderly_secret=None,
         wallet_secret=None,
         orderly_testnet=False,
+        hsm_instance=None,
         **kwargs
     ):
         self.orderly_testnet = orderly_testnet
         super().__init__(
-            orderly_key, orderly_secret, wallet_secret, orderly_testnet, **kwargs
+            orderly_key, orderly_secret, wallet_secret, orderly_testnet, hsm_instance, **kwargs
         )
 
     # account
@@ -32,7 +33,11 @@ class Rest(API):
     from orderly_evm_connector.rest._account import get_orderlykey_ip_restriction
     from orderly_evm_connector.rest._account import set_orderlykey_ip_restriction
     from orderly_evm_connector.rest._account import reset_orderlykey_ip_restriction
-    
+
+    # delegation
+    from orderly_evm_connector.rest._delegate_signer import delegate_signer    
+    from orderly_evm_connector.rest._delegate_signer import delegate_withdraw_request    
+    from orderly_evm_connector.rest._delegate_signer import delegate_add_orderly_key    
 
     # broker
     from orderly_evm_connector.rest._broker import get_list_of_brokers

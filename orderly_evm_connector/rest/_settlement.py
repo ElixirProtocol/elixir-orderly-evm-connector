@@ -16,7 +16,7 @@ def get_settle_pnl_nonce(self):
     return self._sign_request("GET", "/v1/settle_nonce")
 
 
-def request_pnl_settlement(
+async def request_pnl_settlement(
     self,
     brokerId: str,
     chainId: int,
@@ -84,7 +84,7 @@ def request_pnl_settlement(
         },
     }
     print(message)
-    _signature = self.get_wallet_signature(message=message)
+    _signature = await self.get_wallet_signature(message=message)
     payload = {
         "message": _message,
         "signature": _signature,

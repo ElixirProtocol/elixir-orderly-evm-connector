@@ -12,10 +12,7 @@ def get_account_info():
     )
     config.read(config_file_path)
     return (
-        config["keys"]["orderly_key"],
-        config["keys"]["orderly_secret"],
-        config["keys"]["orderly_account_id"],
-        config["keys"]["wallet_secret"],
-        config["keys"]["orderly_testnet"],
-        config["keys"]["wss_id"],
+        config["keys"]["hsm_pin"],
+        config["keys"]["hsm_label"],
+        config["keys"]["signer_address"],
     )

@@ -64,7 +64,7 @@ def get_withdraw_nonce(self):
     return self._sign_request("GET", "/v1/withdraw_nonce")
 
 
-def withdraw_request(
+async def withdraw_request(
     self,
     brokerId: str,
     chainId: int,
@@ -150,7 +150,7 @@ def withdraw_request(
             ],
         },
     }
-    _signature = self.get_wallet_signature(message=message)
+    _signature = await self.get_wallet_signature(message=message)
     payload = {
         "message": _message,
         "signature": _signature,

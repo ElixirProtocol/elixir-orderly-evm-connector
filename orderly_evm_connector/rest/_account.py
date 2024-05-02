@@ -50,7 +50,7 @@ def get_account(self, address: str, broker_id: str):
     return self._request("GET", "/v1/get_account", payload=payload)
 
 
-def register_account(
+async def register_account(
     self, brokerId: str, chainId: int, registrationNonce: str, userAddress: str
 ):
     """Register Account
@@ -103,7 +103,7 @@ def register_account(
         },
     }
 
-    _signature = self.get_wallet_signature(message=message)
+    _signature = await self.get_wallet_signature(message=message)
     payload = {"message": _message, "signature": _signature, "userAddress": userAddress}
     check_required_parameters(
         [
@@ -137,7 +137,7 @@ def get_orderly_key(self, account_id: str, orderly_key: str):
     return self._request("GET", "/v1/get_orderly_key", payload=payload)
 
 
-def add_orderly_key(
+async def add_orderly_key(
     self,
     brokerId: str,
     chainId: int,
@@ -205,7 +205,7 @@ def add_orderly_key(
             ],
         },
     }
-    _signature = self.get_wallet_signature(message=message)
+    _signature = await self.get_wallet_signature(message=message)
     payload = {
         "message": _message,
         "signature": _signature,

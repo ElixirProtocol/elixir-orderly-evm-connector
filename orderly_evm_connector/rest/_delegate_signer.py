@@ -3,7 +3,7 @@ from orderly_evm_connector.lib.utils import check_enum_parameter,get_withdraw_se
 from orderly_evm_connector.lib.enums import WalletSide, AssetStatus
 
 
-def delegate_signer(
+async def delegate_signer(
     self, delegateContract: str, brokerId: str, chainId: int, registrationNonce: int, txHash: str, timestamp: int, userAddress: str
 ):
     """
@@ -31,7 +31,10 @@ def delegate_signer(
             "chainId": chainId,
             "verifyingContract": "0xCcCCccccCCCCcCCCCCCcCcCccCcCCCcCcccccccC",
         },
-        "message": _message,
+        "message": {
+            **_message,
+            "txHash": bytes.fromhex(txHash),
+        },
         "primaryType": "DelegateSigner",
         "types": {
             "EIP712Domain": [
@@ -51,7 +54,7 @@ def delegate_signer(
         },
     }
 
-    _signature = self.get_wallet_signature(message=message)
+    _signature = await self.get_wallet_signature(message=message)
     payload = {"message": _message, "signature": _signature, "userAddress": userAddress}
     check_required_parameters(
         [
@@ -61,10 +64,11 @@ def delegate_signer(
             [userAddress, "userAddress"],
         ]
     )
+    print(payload)
     return self._request("POST", "/v1/delegate_signer", payload=payload)
 
 
-def delegate_add_orderly_key(
+async def delegate_add_orderly_key(
     self,
     delegateContract: str,
     brokerId: str,
@@ -121,7 +125,7 @@ def delegate_add_orderly_key(
             ],
         },
     }
-    _signature = self.get_wallet_signature(message=message)
+    _signature = await self.get_wallet_signature(message=message)
     payload = {
         "message": _message,
         "signature": _signature,
@@ -142,7 +146,7 @@ def delegate_add_orderly_key(
     return self._request("POST", "/v1/delegate_orderly_key", payload=payload)
 
 
-def delegate_withdraw_request(
+async def delegate_withdraw_request(
     self,
     delegateContract: int,
     userAddress: str,
@@ -214,7 +218,7 @@ def delegate_withdraw_request(
             ],
         },
     }
-    _signature = self.get_wallet_signature(message=message)
+    _signature = await self.get_wallet_signature(message=message)
     payload = {
         "message": _message,
         "signature": _signature,
@@ -224,7 +228,7 @@ def delegate_withdraw_request(
     return self._sign_request("POST", "/v1/delegate_withdraw_request", payload=payload)
 
 
-def delegate_request_pnl_settlement(
+async def delegate_request_pnl_settlement(
     self,
     delegateContract: int,
     brokerId: str,
@@ -286,7 +290,7 @@ def delegate_request_pnl_settlement(
         },
     }
 
-    _signature = self.get_wallet_signature(message=message)
+    _signature = await self.get_wallet_signature(message=message)
     payload = {
         "message": _message,
         "signature": _signature,

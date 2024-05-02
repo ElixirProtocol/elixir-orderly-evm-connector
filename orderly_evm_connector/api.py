@@ -1,11 +1,17 @@
 import json
 from json import JSONDecodeError
 import requests
+
+from orderly_evm_connector.lib.hsm import HSMSigner
 from .__version__ import __version__
+from eth_utils.curried import keccak
+from eth_utils.conversions import to_bytes
+from eth_account.messages import encode_structured_data
+from eth_account._utils.signing import to_eth_v, to_bytes32
 from orderly_evm_connector.error import ClientError, ServerError
+from orderly_evm_connector.lib.constants import CHAIN_ID, TESTNET_CHAIN_ID
 from orderly_evm_connector.lib.utils import (
     generate_signature,
-    generate_wallet_signature,
 )
 from orderly_evm_connector.lib.utils import cleanNoneValue
 from orderly_evm_connector.lib.utils import orderlyLog, get_endpoints
@@ -17,6 +23,7 @@ class API(object):
         orderly_secret=None,
         wallet_secret=None,
         orderly_testnet=False,
+        hsm_instance: HSMSigner =None,
         orderly_account_id=None,
         proxies=None,
         timeout=None,
@@ -27,6 +34,7 @@ class API(object):
         self.wallet_secret = wallet_secret
         self.orderly_endpoint, _, _ = get_endpoints(orderly_testnet)
         self.orderly_account_id = orderly_account_id
+        self.hsm_instance = hsm_instance
         self.timeout = timeout
         self.show_header = False
         self.proxies = proxies
@@ -39,6 +47,12 @@ class API(object):
             }
         )
         return
+    
+    def set_account_keys(self, account_id, secret, key):
+        """ Set Account Keys """
+        self.orderly_account_id = account_id
+        self.orderly_secret = secret
+        self.orderly_key = key
 
     def _request(self, http_method, url_path, payload=None):
         if payload:
@@ -75,8 +89,15 @@ class API(object):
 
         return data
 
-    def get_wallet_signature(self, message=None):
-        return generate_wallet_signature(self.wallet_secret, message=message)
+    async def get_wallet_signature(self, message=None):
+        _message = message
+        encoded_message = encode_structured_data(_message)
+        joined = b"\x19" + encoded_message.version + encoded_message.header + encoded_message.body
+        message_hash = keccak(joined)
+        raw_signature = await self.hsm_instance.sign(message_hash)
+        _, _, vrs = self.hsm_instance.adjust_and_recover_signature(message_hash, raw_signature)
+        processed_v = to_eth_v(vrs[0])
+        return (to_bytes32(vrs[1]) + to_bytes32(vrs[2]) + to_bytes(processed_v)).hex()
 
     def _sign_request(self, http_method, url_path, payload=None):
         _payload = ""
@@ -160,6 +181,7 @@ class API(object):
             "POST": self.session.post,
         }.get(http_method, "GET")
         if http_method == "POST" or http_method == "PUT":
+            self.session.headers.update({"Content-Type": "application/json"})
             return method_func(url=params["url"], json=params["params"])
         else:
             self.session.headers.update(
