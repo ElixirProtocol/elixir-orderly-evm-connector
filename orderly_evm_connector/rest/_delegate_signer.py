@@ -54,6 +54,8 @@ async def delegate_signer(
         },
     }
 
+    print(message)
+
     _signature = await self.get_wallet_signature(message=message)
     payload = {"message": _message, "signature": _signature, "userAddress": userAddress}
     check_required_parameters(
@@ -114,7 +116,7 @@ async def delegate_add_orderly_key(
                 {"name": "chainId", "type": "uint256"},
                 {"name": "verifyingContract", "type": "address"},
             ],
-            "AddOrderlyKey": [
+            "DelegateAddOrderlyKey": [
                 {"name": "delegateContract", "type": "address"},
                 {"name": "brokerId", "type": "string"},
                 {"name": "chainId", "type": "uint256"},

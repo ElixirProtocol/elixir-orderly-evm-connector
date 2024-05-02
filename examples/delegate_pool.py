@@ -1,5 +1,6 @@
 import asyncio
 import time
+import argparse
 
 from eth_keys.datatypes import PublicKey
 from examples.hsm_session import HsmSession
@@ -16,10 +17,16 @@ from orderly_evm_connector.lib.constants import TESTNET_CHAIN_ID, CHAIN_ID
     signer_address
 ) = get_account_info()
 
+parser = argparse.ArgumentParser()
+parser.add_argument('router_address', type=str, help='Router address')
+parser.add_argument('tx_hash', type=str, help='Transaction hash to be processed')
+
+args = parser.parse_args()
+
 BROKER_ID = "woofi_pro"
 LIB_PATH = "/opt/cloudhsm/lib/libcloudhsm_pkcs11.so"
 
-async def setup():
+async def setup(router_address, tx_hash):
     await HsmSession.start_session(hsm_pin=hsm_pin, lib_path=LIB_PATH)
 
     hsm_instance = OrderlyHSMSession(
@@ -35,7 +42,7 @@ async def setup():
         debug=True
     )
 
-    account_details = client_public.get_account(signer_address, BROKER_ID)
+    account_details = client_public.get_account(router_address, BROKER_ID)
     account_id = account_details["data"]["account_id"]
     print("account_id: ", account_id)
 
@@ -45,7 +52,8 @@ async def setup():
 
     timestamp = time.time_ns() // 1_000_000
 
-    await client_public.add_orderly_key(
+    await client_public.delegate_add_orderly_key(
+        router_address,
         BROKER_ID,
         TESTNET_CHAIN_ID,
         orderly_key,
@@ -58,29 +66,19 @@ async def setup():
     # Update the new credentials in the client instance.
     client_public.set_account_keys(account_id, orderly_secret, orderly_key)
 
-    POOL_ADDRESSES = [
-        {
-            "pool_address": "0x6a278D0e5ef59f42fe7B2a8B367d42a347176BA8",
-            "tx_hash": "5253c98604c02dd935cb2b38c3a0bea6f3f68561b3c2c3ae472ad3e07a038c6d"
-        }
-    ]
+    nonce_response = client_public.get_registration_nonce()
 
-    for pool_dict in POOL_ADDRESSES:
-        pool_address = pool_dict["pool_address"]
-        tx_hash = pool_dict["tx_hash"]
-        nonce_response = client_public.get_registration_nonce()
+    data = await client_public.delegate_signer(
+        router_address,
+        BROKER_ID,
+        TESTNET_CHAIN_ID,
+        int(nonce_response["data"]["registration_nonce"]),
+        tx_hash,
+        int(get_timestamp()),
+        signer_address            
+    )
 
-        data = await client_public.delegate_signer(
-            pool_address,
-            BROKER_ID,
-            TESTNET_CHAIN_ID,
-            int(nonce_response["data"]["registration_nonce"]),
-            tx_hash,
-            int(get_timestamp()),
-            signer_address            
-        )
-
-        print(data)
+    print(data)
 
 if __name__ == "__main__":
-    asyncio.run(setup())
+    asyncio.run(setup(args.router_address, args.tx_hash))

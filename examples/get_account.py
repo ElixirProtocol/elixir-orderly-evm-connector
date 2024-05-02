@@ -1,7 +1,6 @@
 import asyncio
 import time
 
-from eth_keys.datatypes import PublicKey
 from examples.hsm_session import HsmSession
 from examples.orderly_hsm import OrderlyHSMSession
 from orderly_evm_connector.lib.utils import encode_key
@@ -18,6 +17,7 @@ from orderly_evm_connector.lib.constants import TESTNET_CHAIN_ID, CHAIN_ID
 
 BROKER_ID = "woofi_pro"
 LIB_PATH = "/opt/cloudhsm/lib/libcloudhsm_pkcs11.so"
+ROUTER_ADDRESS = "0x6a278D0e5ef59f42fe7B2a8B367d42a347176BA8"
 
 async def setup():
     await HsmSession.start_session(hsm_pin=hsm_pin, lib_path=LIB_PATH)
@@ -35,7 +35,7 @@ async def setup():
         debug=True
     )
 
-    account_details = client_public.get_account(signer_address, BROKER_ID)
+    account_details = client_public.get_account(ROUTER_ADDRESS, BROKER_ID)
     account_id = account_details["data"]["account_id"]
     print("account_id: ", account_id)
 
@@ -45,7 +45,8 @@ async def setup():
 
     timestamp = time.time_ns() // 1_000_000
 
-    await client_public.add_orderly_key(
+    await client_public.delegate_add_orderly_key(
+        ROUTER_ADDRESS,
         BROKER_ID,
         TESTNET_CHAIN_ID,
         orderly_key,
