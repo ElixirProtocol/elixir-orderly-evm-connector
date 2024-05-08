@@ -16,6 +16,7 @@ requests = "^2.31.0"
 websocket_client = "^1.6.2"
 pykcs11 = "^1.5.12"
 cryptography = "^42.0.5"
+aiohttp = "^3.9.5"
 
 [tool.poetry.dev-dependencies]
 

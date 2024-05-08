@@ -1,6 +1,7 @@
 import json
 from json import JSONDecodeError
-import requests
+from typing import Callable, Coroutine
+from aiohttp import ClientResponse, ClientSession
 
 from orderly_evm_connector.lib.hsm import HSMSigner
 from .__version__ import __version__
@@ -39,7 +40,7 @@ class API(object):
         self.show_header = False
         self.proxies = proxies
         self.logger = orderlyLog(debug=debug)
-        self.session = requests.Session()
+        self.session = ClientSession()
         self.session.headers.update(
             {
                 "Content-Type": "application/json;charset=utf-8",
@@ -54,7 +55,7 @@ class API(object):
         self.orderly_secret = secret
         self.orderly_key = key
 
-    def _request(self, http_method, url_path, payload=None):
+    async def _request(self, http_method, url_path, payload=None):
         if payload:
             _payload = cleanNoneValue(payload)
             if _payload:
@@ -78,14 +79,14 @@ class API(object):
                 "proxies": self.proxies,
             }
         )
-        response = self._dispatch_request(http_method, params)
-        self.logger.debug("raw response from server:" + response.text)
-        self._handle_rest_exception(response)
+        response: ClientResponse = await self._dispatch_request(http_method, params)
+        self.logger.debug("raw response from server:" + await response.text())
+        await self._handle_rest_exception(response)
 
         try:
-            data = response.json()
+            data = await response.json()
         except ValueError:
-            data = response.text
+            data = await response.text()
 
         return data
 
@@ -133,7 +134,7 @@ class API(object):
         self.logger.debug(f"Sign Request Headers: {self.session.headers}")
         return self.send_request(http_method, url_path, payload)
 
-    def send_request(self, http_method, url_path, payload=None):
+    async def send_request(self, http_method, url_path, payload=None):
         if payload is None:
             payload = {}
         url = self.orderly_endpoint + url_path
@@ -146,14 +147,14 @@ class API(object):
                 "proxies": self.proxies,
             }
         )
-        response = self._dispatch_request(http_method, params)
-        self.logger.debug("raw response from server:" + response.text)
-        self._handle_rest_exception(response)
+        response: ClientResponse = await self._dispatch_request(http_method, params)
+        self.logger.debug("raw response from server:" + await response.text())
+        await self._handle_rest_exception(response)
 
         try:
-            data = response.json()
+            data = await response.json()
         except ValueError:
-            data = response.text
+            data = await response.text()
         result = {}
 
         if self.show_header:
@@ -174,7 +175,7 @@ class API(object):
         return _params
 
     def _dispatch_request(self, http_method, params):
-        method_func = {
+        method_func: Callable[..., Coroutine[ClientResponse]] = {
             "GET": self.session.get,
             "DELETE": self.session.delete,
             "PUT": self.session.put,
@@ -191,16 +192,17 @@ class API(object):
             )
             return method_func(url=params["url"])
 
-    def _handle_rest_exception(self, response):
-        status_code = response.status_code
+    async def _handle_rest_exception(self, response: ClientResponse):
+        status_code = response.status
+        text_response = await response.text()
         if status_code <= 400:
             return
         if 400 < status_code < 500:
             try:
-                err = json.loads(response.text)
+                err = json.loads(text_response)
             except JSONDecodeError:
                 raise ClientError(
-                    status_code, None, response.text, None, response.headers
+                    status_code, None, text_response, None, response.headers
                 )
             error_data = None
             if "data" in err:
@@ -208,4 +210,7 @@ class API(object):
             raise ClientError(
                 status_code, err["code"], err["message"], response.headers, error_data
             )
-        raise ServerError(status_code, response.text)
+        raise ServerError(status_code, text_response)
+
+    async def close(self):
+        await self.session.close()

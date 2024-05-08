@@ -66,8 +66,7 @@ async def delegate_signer(
             [userAddress, "userAddress"],
         ]
     )
-    print(payload)
-    return self._request("POST", "/v1/delegate_signer", payload=payload)
+    return await self._request("POST", "/v1/delegate_signer", payload=payload)
 
 
 async def delegate_add_orderly_key(
@@ -145,7 +144,7 @@ async def delegate_add_orderly_key(
             [userAddress, "userAddress"],
         ]
     )
-    return self._request("POST", "/v1/delegate_orderly_key", payload=payload)
+    return await self._request("POST", "/v1/delegate_orderly_key", payload=payload)
 
 
 async def delegate_withdraw_request(
@@ -227,7 +226,7 @@ async def delegate_withdraw_request(
         "userAddress": userAddress,
         "verifyingContract": verifyingContract,
     }
-    return self._sign_request("POST", "/v1/delegate_withdraw_request", payload=payload)
+    return await self._sign_request("POST", "/v1/delegate_withdraw_request", payload=payload)
 
 
 async def delegate_request_pnl_settlement(
@@ -299,4 +298,4 @@ async def delegate_request_pnl_settlement(
         "userAddress": userAddress,
         "verifyingContract": verifyingContract,
     }
-    return self._sign_request("POST", "/v1/delegate_settle_pnl", payload=payload)
+    return await self._sign_request("POST", "/v1/delegate_settle_pnl", payload=payload)

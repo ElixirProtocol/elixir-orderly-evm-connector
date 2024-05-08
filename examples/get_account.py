@@ -35,7 +35,7 @@ async def setup():
         debug=True
     )
 
-    account_details = client_public.get_account(ROUTER_ADDRESS, BROKER_ID)
+    account_details = await client_public.get_account(ROUTER_ADDRESS, BROKER_ID)
     account_id = account_details["data"]["account_id"]
     print("account_id: ", account_id)
 
@@ -59,8 +59,15 @@ async def setup():
     # Update the new credentials in the client instance.
     client_public.set_account_keys(account_id, orderly_secret, orderly_key)
 
-    holdings = client_public.get_current_holdings(True)
+    holdings = await client_public.get_current_holdings(True)
     print(holdings)
+
+    fees = await client_public.get_user_fee_tier(account_id=account_id)
+    print(fees)
+
+    print(await client_public.get_system_maintenance_status())
+
+    await client_public.close()
 
 if __name__ == "__main__":
     asyncio.run(setup())
