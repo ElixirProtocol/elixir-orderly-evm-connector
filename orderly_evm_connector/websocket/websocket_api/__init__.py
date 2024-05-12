@@ -118,3 +118,6 @@ class WebsocketPrivateAPIClient(OrderlyWebsocketClient):
     from orderly_evm_connector.websocket.websocket_api._private_stream import (
         get_notifications,
     )
+    from orderly_evm_connector.websocket.websocket_api._private_stream import (
+        get_execution_report,
+    )

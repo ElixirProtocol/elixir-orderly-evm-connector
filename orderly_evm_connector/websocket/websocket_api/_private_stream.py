@@ -68,3 +68,10 @@ def get_notifications(self):
     """
     _message = {"id": self.wss_id, "topic": "notifications", "event": "subscribe"}
     self.send_message_to_server(_message)
+
+def get_execution_report(self):
+    """Push interval: real-time push
+    https://docs-api-evm.orderly.network/#websocket-api-private-notifications
+    """
+    _message = {"id": self.wss_id, "topic": "executionreport", "event": "subscribe"}
+    self.send_message_to_server(_message)

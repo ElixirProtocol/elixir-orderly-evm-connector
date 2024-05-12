@@ -98,8 +98,12 @@ class OrderlyWebsocketClient:
             proxies=proxies,
         )
 
-    def on_socket_open(self, socket_manager):
+    def on_socket_open(self, socket_manager: OrderlySocketManager):
         self.logger.debug("Orderly WebSocket Connection opened. Subscribing...")
+
+        # We are in the constructor of the class, some attributes are not yet initialized
+        if not hasattr(self, "socket_manager"):
+            self.socket_manager = socket_manager
 
         if self.private:
             self.auth_login()
