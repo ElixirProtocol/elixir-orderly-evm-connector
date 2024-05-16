@@ -5,7 +5,9 @@ from examples.hsm_session import HsmSession
 from examples.orderly_hsm import OrderlyHSMSession
 from orderly_evm_connector.rest import Rest as Client
 from utils.config import get_account_info
-from orderly_evm_connector.lib.constants import TESTNET_CHAIN_ID, CHAIN_ID
+
+TESTNET_CHAIN_ID = 84532
+CHAIN_ID = 8453
 
 (
     hsm_pin,
@@ -13,7 +15,7 @@ from orderly_evm_connector.lib.constants import TESTNET_CHAIN_ID, CHAIN_ID
     signer_address
 ) = get_account_info()
 
-BROKER_ID = "woofi_pro"
+BROKER_ID = "elixir"
 LIB_PATH = "/opt/cloudhsm/lib/libcloudhsm_pkcs11.so"
 
 async def setup():
@@ -32,11 +34,11 @@ async def setup():
         debug=True
     )
 
-    account_details = client_public.get_account(signer_address, BROKER_ID)
+    account_details = await client_public.get_account(signer_address, BROKER_ID)
     print(account_details)
 
     if not account_details["success"]:
-        nonce_response = client_public.get_registration_nonce()
+        nonce_response = await client_public.get_registration_nonce()
 
         data = await client_public.register_account(
             BROKER_ID,

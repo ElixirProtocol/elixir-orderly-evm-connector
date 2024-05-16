@@ -9,7 +9,6 @@ from orderly_evm_connector.lib.utils import encode_key, get_timestamp
 from orderly_evm_connector.rest import Rest as Client
 from utils.config import get_account_info
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
-from orderly_evm_connector.lib.constants import TESTNET_CHAIN_ID, CHAIN_ID
 
 (
     hsm_pin,
@@ -23,7 +22,10 @@ parser.add_argument('tx_hash', type=str, help='Transaction hash to be processed'
 
 args = parser.parse_args()
 
-BROKER_ID = "woofi_pro"
+TESTNET_CHAIN_ID = 84532
+CHAIN_ID = 8453
+
+BROKER_ID = "elixir"
 LIB_PATH = "/opt/cloudhsm/lib/libcloudhsm_pkcs11.so"
 
 async def setup(router_address, tx_hash):
@@ -39,12 +41,13 @@ async def setup(router_address, tx_hash):
     client_public = Client(
         orderly_testnet=True,
         hsm_instance=hsm_instance,
-        debug=True
+        debug=True,
     )
 
-    account_details = client_public.get_account(router_address, BROKER_ID)
-    account_id = account_details["data"]["account_id"]
-    print("account_id: ", account_id)
+    # account_details = await client_public.get_account(router_address, BROKER_ID)
+    # print(account_details, { 'router_address': router_address, 'BROKER_ID': BROKER_ID })
+    # account_id = account_details["data"]["account_id"]
+    # print("account_id: ", account_id)
 
     orderly_priv_key = Ed25519PrivateKey.generate()
     orderly_secret = encode_key(orderly_priv_key.private_bytes_raw())
@@ -64,9 +67,9 @@ async def setup(router_address, tx_hash):
     )
 
     # Update the new credentials in the client instance.
-    client_public.set_account_keys(account_id, orderly_secret, orderly_key)
+    client_public.set_account_keys(None, orderly_secret, orderly_key)
 
-    nonce_response = client_public.get_registration_nonce()
+    nonce_response = await client_public.get_registration_nonce()
 
     data = await client_public.delegate_signer(
         router_address,
