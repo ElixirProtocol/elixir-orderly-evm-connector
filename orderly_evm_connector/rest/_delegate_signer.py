@@ -208,7 +208,7 @@ async def delegate_withdraw_request(
                 {"name": "verifyingContract", "type": "address"},
             ],
             "DelegateWithdraw": [
-                {"name": "delegateContract", "type": "string"},
+                {"name": "delegateContract", "type": "address"},
                 {"name": "brokerId", "type": "string"},
                 {"name": "chainId", "type": "uint256"},
                 {"name": "receiver", "type": "address"},
