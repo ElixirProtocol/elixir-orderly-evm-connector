@@ -19,7 +19,8 @@ CHAIN_ID = 8453
 
 BROKER_ID = "elixir"
 LIB_PATH = "/opt/cloudhsm/lib/libcloudhsm_pkcs11.so"
-ROUTER_ADDRESS = "0x3b7fA734559d50867256B3d0aFDE749c2202b19D"
+# ROUTER_ADDRESS = "0x3b7fA734559d50867256B3d0aFDE749c2202b19D" # old
+ROUTER_ADDRESS = "0x4f56Ee8e3e0403494ba95778664A687AC4C34545" # new
 
 async def setup():
     await HsmSession.start_session(hsm_pin=hsm_pin, lib_path=LIB_PATH)
@@ -64,10 +65,11 @@ async def setup():
     holdings = await client_public.get_current_holdings(True)
     print(holdings)
 
-    # acc_info = await client_public.get_account_information()
-    # print(acc_info)
+    all_positions_info = await client_public.get_all_positions_info()
+    print(all_positions_info)
 
-    print(await client_public.get_system_maintenance_status())
+
+    # print(await client_public.get_system_maintenance_status())
 
     await client_public.close()
 

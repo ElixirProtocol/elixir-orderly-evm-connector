@@ -83,5 +83,7 @@ async def setup(router_address, tx_hash):
 
     print(data)
 
+    await client_public.close()
+
 if __name__ == "__main__":
     asyncio.run(setup(args.router_address, args.tx_hash))

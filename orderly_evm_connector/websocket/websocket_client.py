@@ -40,6 +40,7 @@ class OrderlyWebsocketClient:
             self._timestamp, self._signature = generate_signature(orderly_secret)
         self.wss_id = wss_id if wss_id else get_uuid()
         self.orderly_key = orderly_key
+        self.orderly_secret = orderly_secret
         self.private = private
         self.timeout = timeout
         self.logger = orderlyLog(debug=debug)
@@ -63,6 +64,9 @@ class OrderlyWebsocketClient:
         self.logger.debug("Orderly WebSocket Client started.")
 
     def _auth_params(self):
+        if self.orderly_secret:
+            self._timestamp, self._signature = generate_signature(self.orderly_secret)
+
         return {
             "id": self.wss_id,
             "event": "auth",
@@ -112,7 +116,7 @@ class OrderlyWebsocketClient:
 
     def auth_login(self):
         if not self.socket_manager._login:
-            self.socket_manager.send_message(json.dumps(self.auth_params))
+            self.socket_manager.send_message(json.dumps(self._auth_params()))
             self.socket_manager._login = True
 
     def send(self, message: dict):
