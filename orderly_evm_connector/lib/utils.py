@@ -7,6 +7,7 @@ from collections import OrderedDict
 from urllib.parse import urlencode
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 from eth_account.messages import encode_structured_data
+from web3 import Web3
 import base58,base64
 import logging
 from orderly_evm_connector.error import (
@@ -117,6 +118,16 @@ def generate_signature(orderly_secret, message=None):
         _orderly_private_key.sign(bytes(str(message), "utf-8"))
     ).decode("utf-8")
     return str(_timestamp), _signature
+
+def generate_wallet_signature(wallet_secret, message=None):
+    private_key = f"0x{wallet_secret}"
+    _message = message
+    encoded_message = encode_structured_data(_message)
+    w3 = Web3()
+    signed_message = w3.eth.account.sign_message(
+        encoded_message, private_key=private_key
+    )
+    return signed_message.signature.hex()
 
 def get_endpoints(orderly_testnet):
     # True: Testnet, False: Mainnet

@@ -13,6 +13,7 @@ from orderly_evm_connector.error import ClientError, ServerError
 from orderly_evm_connector.lib.constants import CHAIN_ID, TESTNET_CHAIN_ID
 from orderly_evm_connector.lib.utils import (
     generate_signature,
+    generate_wallet_signature,
 )
 from orderly_evm_connector.lib.utils import cleanNoneValue
 from orderly_evm_connector.lib.utils import orderlyLog, get_endpoints
@@ -91,6 +92,12 @@ class API(object):
         return data
 
     async def get_wallet_signature(self, message=None):
+        if self.hsm_instance is None:
+            return generate_wallet_signature(self.wallet_secret, message=message)
+        else:
+            await self._get_hsm_signature(message=message)
+
+    async def _get_hsm_signature(self, message=None):
         _message = message
         encoded_message = encode_structured_data(_message)
         joined = b"\x19" + encoded_message.version + encoded_message.header + encoded_message.body
@@ -100,7 +107,7 @@ class API(object):
         processed_v = to_eth_v(vrs[0])
         return (to_bytes32(vrs[1]) + to_bytes32(vrs[2]) + to_bytes(processed_v)).hex()
 
-    def _sign_request(self, http_method, url_path, payload=None):
+    async def _sign_request(self, http_method, url_path, payload=None):
         _payload = ""
         if payload:
             _payload = cleanNoneValue(payload)
@@ -132,7 +139,7 @@ class API(object):
             }
         )
         self.logger.debug(f"Sign Request Headers: {self.session.headers}")
-        return self.send_request(http_method, url_path, payload)
+        return await self.send_request(http_method, url_path, payload)
 
     async def send_request(self, http_method, url_path, payload=None):
         if payload is None:

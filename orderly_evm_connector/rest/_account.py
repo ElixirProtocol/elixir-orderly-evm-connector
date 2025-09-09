@@ -113,7 +113,7 @@ async def register_account(
             [userAddress, "userAddress"],
         ]
     )
-    return self._request("POST", "/v1/register_account", payload=payload)
+    return await self._request("POST", "/v1/register_account", payload=payload)
 
 
 def get_orderly_key(self, account_id: str, orderly_key: str):
@@ -223,7 +223,7 @@ async def add_orderly_key(
             [userAddress, "userAddress"],
         ]
     )
-    return self._request("POST", "/v1/orderly_key", payload=payload)
+    return await self._request("POST", "/v1/orderly_key", payload=payload)
 
 
 def update_leverage_configuration(self, leverage: int):

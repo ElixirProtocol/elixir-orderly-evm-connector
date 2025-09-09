@@ -37,6 +37,7 @@ class Rest(API):
     # delegation
     from orderly_evm_connector.rest._delegate_signer import delegate_signer    
     from orderly_evm_connector.rest._delegate_signer import delegate_withdraw_request    
+    from orderly_evm_connector.rest._delegate_signer import delegate_request_pnl_settlement 
     from orderly_evm_connector.rest._delegate_signer import delegate_add_orderly_key    
 
     # broker

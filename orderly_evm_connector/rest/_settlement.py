@@ -83,7 +83,6 @@ async def request_pnl_settlement(
             ],
         },
     }
-    print(message)
     _signature = await self.get_wallet_signature(message=message)
     payload = {
         "message": _message,
@@ -91,7 +90,7 @@ async def request_pnl_settlement(
         "userAddress": userAddress,
         "verifyingContract": verifyingContract,
     }
-    return self._sign_request("POST", "/v1/settle_pnl", payload=payload)
+    return await self._sign_request("POST", "/v1/settle_pnl", payload=payload)
 
 
 def get_pnl_settlement_history(
