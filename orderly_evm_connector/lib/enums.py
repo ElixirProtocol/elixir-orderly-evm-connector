@@ -54,3 +54,20 @@ class AssetStatus(AutoName):
     PROCESSING = auto()
     COMPLETED = auto()
     FAILED = auto()
+
+
+class VenueType(AutoName):
+    ORDERLY = auto()
+    CEFFU = auto()
+
+
+class RebalanceStatus(AutoName):
+    NEW = auto()
+    PENDING = auto()
+    COMPLETED = auto()
+    FAILED = auto()
+
+
+class MirrorXDelegationType(AutoName):
+    DELEGATE = auto()
+    UNDELEGATE = auto()

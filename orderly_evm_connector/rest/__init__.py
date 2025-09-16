@@ -35,16 +35,24 @@ class Rest(API):
     from orderly_evm_connector.rest._account import reset_orderlykey_ip_restriction
 
     # delegation
-    from orderly_evm_connector.rest._delegate_signer import delegate_signer    
-    from orderly_evm_connector.rest._delegate_signer import delegate_withdraw_request    
-    from orderly_evm_connector.rest._delegate_signer import delegate_request_pnl_settlement 
-    from orderly_evm_connector.rest._delegate_signer import delegate_add_orderly_key    
+    from orderly_evm_connector.rest._delegate_signer import delegate_signer
+    from orderly_evm_connector.rest._delegate_signer import delegate_withdraw_request
+    from orderly_evm_connector.rest._delegate_signer import delegate_request_pnl_settlement
+    from orderly_evm_connector.rest._delegate_signer import delegate_add_orderly_key
 
     # broker
     from orderly_evm_connector.rest._broker import get_list_of_brokers
     from orderly_evm_connector.rest._broker import get_user_fee_tier
     from orderly_evm_connector.rest._broker import get_broker_daily_volume
     from orderly_evm_connector.rest._broker import get_default_broker_fee
+
+    # ceffu integration
+    from orderly_evm_connector.rest._ceffu import get_venue_balance
+    from orderly_evm_connector.rest._ceffu import get_available_rebalance
+    from orderly_evm_connector.rest._ceffu import get_mirrorx_history
+    from orderly_evm_connector.rest._ceffu import get_venue_rebalance_history
+    from orderly_evm_connector.rest._ceffu import venue_rebalance
+    from orderly_evm_connector.rest._ceffu import mirrorx_delegate
 
     # general
     from orderly_evm_connector.rest._general import get_system_maintenance_status
