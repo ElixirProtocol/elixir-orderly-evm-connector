@@ -21,7 +21,7 @@ import logging
 initialized = False
 
 def orderlyLog(debug=False):
-    
+
     logger = logging.getLogger("orderly_log")
     if not logger.handlers:
         if debug:
@@ -153,10 +153,16 @@ def get_endpoints(orderly_testnet):
             orderly_websocket_public_endpoint,
             orderly_websocket_private_endpoint,
         )
-        
+
 def get_withdraw_settle_verifyingcontract(orderly_testnet):
     verifyingcontract  = '0x1826B75e2ef249173FC735149AE4B8e9ea10abff' if orderly_testnet else '0x6F7a338F2aA472838dEFD3283eB360d4Dff5D203'
-    return verifyingcontract    
+    return verifyingcontract
 
 def encode_key(key: bytes):
     return "ed25519:%s" % base58.b58encode(key).decode("utf-8")
+
+def decode_ws_error_code(data):
+    try:
+        return str(int.from_bytes(data, byteorder='big'))
+    except:
+        return ""
