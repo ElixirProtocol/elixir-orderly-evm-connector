@@ -18,6 +18,7 @@ pykcs11 = "^1.5.12"
 cryptography = "^42.0.5"
 aiohttp = "3.*"
 web3 = "^6.0.0"
+setuptools = "^80.9.0"
 
 [tool.poetry.dev-dependencies]
 

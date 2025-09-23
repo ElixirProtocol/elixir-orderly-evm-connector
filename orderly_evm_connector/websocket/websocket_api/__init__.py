@@ -32,6 +32,7 @@ class WebsocketPublicAPIClient(OrderlyWebsocketClient):
             timeout=timeout,
             debug=debug,
             proxies=proxies,
+            async_mode=True
         )
 
     # public websocket
@@ -91,6 +92,7 @@ class WebsocketPrivateAPIClient(OrderlyWebsocketClient):
             on_open=on_open,
             on_close=on_close,
             on_error=on_error,
+            async_mode=True
         )
 
     # private websocket
