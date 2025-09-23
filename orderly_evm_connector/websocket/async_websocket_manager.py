@@ -1,6 +1,7 @@
 import asyncio
 import contextlib
 import json
+import time
 import websockets
 from websockets.exceptions import (
     ConnectionClosedError,
@@ -47,6 +48,8 @@ class AsyncWebsocketManager:
         self.loop = asyncio.get_event_loop()
         self._stopping = False
         self._read_task = None
+        self._last_heartbeat = 0
+        self._last_message_time = time.time()
 
     def start(self):
         pass
@@ -55,15 +58,27 @@ class AsyncWebsocketManager:
         retries = 0
         while retries <= self.max_retries:
             try:
+                self._stopping = False
+
                 self.logger.debug(
                     f"Creating connection with WebSocket Server: {self.websocket_url}, proxies: {self._proxy_params}"
                 )
                 self.ws = await websockets.connect(
-                    self.websocket_url, timeout=self.timeout, close_timeout=5, **self._proxy_params
+                    self.websocket_url,
+                    timeout=self.timeout,
+                    close_timeout=5,
+                    ping_interval=10,
+                    ping_timeout=10,
+                    **self._proxy_params
                 )
                 self.logger.debug(
                     f"WebSocket connection has been established: {self.websocket_url}, proxies: {self._proxy_params}"
                 )
+
+                # Reset connection state
+                self.init = False
+                self._last_message_time = time.time()
+
                 if self.on_open:
                     self.on_open(self)
                 return
@@ -74,7 +89,9 @@ class AsyncWebsocketManager:
                     self.logger.warning(
                         f"Retrying connection... (Attempt {retries}/{self.max_retries})"
                     )
-                    await asyncio.sleep(WEBSOCKET_RETRY_SLEEP_TIME)
+                    # Exponential backoff with jitter
+                    backoff_time = min(WEBSOCKET_RETRY_SLEEP_TIME * (2 ** (retries - 1)), 60)
+                    await asyncio.sleep(backoff_time)
                 else:
                     raise
 
@@ -100,7 +117,13 @@ class AsyncWebsocketManager:
 
         # run read loop in a task so we can await it during close
         self._read_task = asyncio.create_task(self.read_data())
-        await self._read_task
+
+        try:
+            await self._read_task
+        except asyncio.CancelledError:
+            self.logger.info("WebSocket tasks cancelled")
+        except Exception as e:
+            self.logger.error(f"Error in WebSocket run: {e}")
 
     async def ensure_init(self):
         while True:
@@ -113,15 +136,17 @@ class AsyncWebsocketManager:
             _payload = {"event": "pong"}
             await self.ws.send(json.dumps(_payload))
             self.logger.debug(f"Sent Ping frame: {_payload}")
+            self._last_heartbeat = time.time()
         except Exception as e:
             self.logger.error("Failed to send Ping: {}".format(e))
 
     async def read_data(self):
         try:
-            while True:
+            while not self._stopping:
                 try:
                     message = await self.ws.recv()
                     self.init = True
+                    self._last_message_time = time.time()
                     _message = json.loads(message)
                 except json.JSONDecodeError:
                     err_code = decode_ws_error_code(message)
@@ -140,10 +165,14 @@ class AsyncWebsocketManager:
             # If it’s a normal 1000 from the peer, also don’t call it “abnormal”.
             if getattr(e, "code", None) == 1000:
                 self.logger.info("WebSocket closed normally by peer.")
+                # Still attempt to reconnect unless we're stopping
+                if not self._stopping:
+                    await self.reconnect()
                 return
             self.logger.warning("WebSocket connection closed unexpectedly (code=%s). Reconnecting...",
                                 getattr(e, "code", None))
-            await self.reconnect()
+            if not self._stopping:
+                await self.reconnect()
         except WebSocketException as e:
             if self._stopping:
                 self.logger.info("Stopping; not reconnecting after exception.")
@@ -164,7 +193,7 @@ class AsyncWebsocketManager:
                 # Initiate close and WAIT for peer's close frame
                 await self.ws.close(code=1000, reason="")
             finally:
-                if self._read_task:
+                if self._read_task and not self._read_task.done():
                     try:
                         await asyncio.wait_for(self._read_task, timeout=5)
                     except asyncio.TimeoutError:
